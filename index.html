@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0f172a" />
+<title>Stock Count - CCO / Crochet / MTP</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="icon" href="icon-192.png" />
+<style>
+  :root {
+    --bg: #0f172a; --bg-2: #1e293b;
+    --surface: #ffffff; --surface-2: #f1f5f9;
+    --text: #0f172a; --text-muted: #64748b;
+    --border: #e2e8f0;
+    --primary: #0284c7; --primary-2: #0369a1;
+    --accent: #06b6d4;
+    --success: #16a34a; --success-bg: #dcfce7;
+    --warning: #d97706; --warning-bg: #fef3c7;
+    --danger: #dc2626; --danger-bg: #fee2e2;
+    --info: #2563eb; --info-bg: #dbeafe;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Sarabun', 'Noto Sans Thai', system-ui, sans-serif;
+    background: var(--surface-2); color: var(--text);
+    -webkit-tap-highlight-color: transparent; }
+  body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+  header.app-header { background: linear-gradient(135deg, var(--bg) 0%, var(--bg-2) 100%);
+    color: #fff; padding: 14px 16px; position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .header-row { display: flex; align-items: center; gap: 12px; max-width: 1400px; margin: 0 auto; }
+  .header-title { font-size: 17px; font-weight: 700; flex: 1; min-width: 0; }
+  .header-title small { display: block; font-size: 11px; opacity: 0.7; font-weight: 400; margin-top: 2px; }
+  .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .header-btn { background: rgba(255,255,255,0.1); color: #fff;
+    border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px;
+    font-size: 13px; cursor: pointer; font-weight: 500; transition: background 0.15s; }
+  .header-btn:hover { background: rgba(255,255,255,0.2); }
+  .header-btn.primary { background: var(--primary); border-color: var(--primary); }
+  .header-btn.primary:hover { background: var(--primary-2); }
+  main { flex: 1; padding: 16px; max-width: 1400px; margin: 0 auto; width: 100%; }
+  .view { display: none; }
+  .view.active { display: block; }
+  .card { background: var(--surface); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    padding: 20px; margin-bottom: 16px; }
+  .card h2 { margin: 0 0 4px 0; font-size: 18px; }
+  .card .subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 16px; }
+  .form-grid { display: grid; gap: 12px; }
+  .form-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 600px) { .form-grid.cols-2 { grid-template-columns: 1fr; } }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+  input[type=text], input[type=number], input[type=file], select, textarea { width: 100%;
+    padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px; font-family: inherit; background: #fff;
+    transition: border 0.15s, box-shadow 0.15s; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(2,132,199,0.12); }
+  .input-group { display: flex; gap: 8px; }
+  .input-group input { flex: 1; }
+  .btn { display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border);
+    background: #fff; cursor: pointer; font-size: 14px; font-weight: 600;
+    font-family: inherit; transition: all 0.15s; }
+  .btn:hover { background: var(--surface-2); }
+  .btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .btn.primary:hover { background: var(--primary-2); }
+  .btn.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+  .btn.danger:hover { background: #b91c1c; }
+  .btn.sm { padding: 6px 10px; font-size: 12px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .session-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .session-item { background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px; cursor: pointer; transition: all 0.15s; }
+  .session-item:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(2,132,199,0.1); }
+  .session-item .org-badge { display: inline-block; padding: 2px 8px; font-size: 11px;
+    border-radius: 999px; font-weight: 700; margin-right: 4px; }
+  .badge-cco { background: #fce7f3; color: #be185d; }
+  .badge-crochet { background: #fef3c7; color: #92400e; }
+  .badge-mtp { background: #e0e7ff; color: #3730a3; }
+  .badge-other { background: #f1f5f9; color: #475569; }
+  .session-item .name { font-weight: 700; margin-top: 6px; font-size: 15px; }
+  .session-item .meta { color: var(--text-muted); font-size: 12px; margin-top: 4px; }
+  .session-item .progress { margin-top: 10px; background: var(--surface-2); border-radius: 4px; height: 6px; overflow: hidden; }
+  .session-item .progress-bar { height: 100%; background: var(--primary); transition: width 0.3s; }
+  .session-item .stats { display: flex; gap: 12px; margin-top: 8px; font-size: 12px; color: var(--text-muted); }
+  .session-item .stats b { color: var(--text); }
+  .stats-row { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-bottom: 16px; }
+  .stat-card { background: var(--surface); border-radius: 10px; padding: 14px; border-left: 4px solid var(--primary); }
+  .stat-card.success { border-left-color: var(--success); }
+  .stat-card.warning { border-left-color: var(--warning); }
+  .stat-card.danger { border-left-color: var(--danger); }
+  .stat-card.info { border-left-color: var(--info); }
+  .stat-card .label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .stat-card .value { font-size: 22px; font-weight: 700; line-height: 1.1; }
+  .stat-card .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .scanner-box { background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%);
+    color: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px;
+    position: sticky; top: 64px; z-index: 10; }
+  .scanner-box label { color: #e0f2fe; margin-bottom: 6px; }
+  .scanner-input { width: 100%; padding: 14px 16px; font-size: 18px; font-weight: 600;
+    font-family: 'Courier New', monospace; border: 2px solid #fff; border-radius: 8px;
+    background: rgba(255,255,255,0.95); color: #0f172a; text-align: center; letter-spacing: 2px; }
+  .scanner-input:focus { outline: none; box-shadow: 0 0 0 4px rgba(6,182,212,0.5); }
+  .scanner-status { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 13px; }
+  .scanner-status .focus-indicator { background: var(--success); color: #fff;
+    padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .scanner-status .focus-indicator.lost { background: var(--danger); }
+  .last-scan { font-size: 12px; opacity: 0.9; font-family: monospace; }
+  .table-wrap { overflow-x: auto; border-radius: 10px; background: #fff; }
+  table.products { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.products th, table.products td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  table.products th { background: var(--surface-2); font-weight: 600; color: var(--text);
+    position: sticky; top: 0; z-index: 2; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  table.products tbody tr:hover { background: #f8fafc; }
+  table.products tr.matched td { background: var(--success-bg) !important; }
+  table.products tr.over td { background: var(--danger-bg) !important; }
+  table.products tr.pending td { background: #fff; }
+  table.products td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.products td.title { max-width: 280px; white-space: normal; }
+  .row-status { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .status-matched { background: var(--success); color: #fff; }
+  .status-pending { background: var(--surface-2); color: var(--text-muted); }
+  .status-over { background: var(--danger); color: #fff; }
+  .status-under { background: var(--warning); color: #fff; }
+  .filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .filter-bar input[type=text] { flex: 1; min-width: 200px; }
+  .filter-bar select { width: auto; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+    display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+  .modal-overlay.active { display: flex; }
+  .modal { background: #fff; border-radius: 12px; padding: 20px; max-width: 480px; width: 100%; max-height: 90vh; overflow: auto; }
+  .modal h3 { margin: 0 0 16px 0; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  .toast-stack { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .toast { background: var(--bg); color: #fff; padding: 12px 18px; border-radius: 8px;
+    font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    animation: toast-in 0.2s, toast-out 0.3s 2.5s forwards; max-width: 400px; }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--danger); }
+  .toast.warning { background: var(--warning); }
+  @keyframes toast-in { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes toast-out { to { transform: translateY(20px); opacity: 0; } }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;
+    background: var(--surface-2); border-radius: 999px; font-size: 12px; font-weight: 500; }
+  .chip button { background: none; border: none; cursor: pointer; padding: 0; font-size: 14px; color: var(--text-muted); }
+  .chip-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .drop-zone { border: 2px dashed var(--border); border-radius: 12px; padding: 24px;
+    text-align: center; color: var(--text-muted); transition: all 0.15s; cursor: pointer; }
+  .drop-zone.drag-over { border-color: var(--primary); background: var(--info-bg); color: var(--info); }
+  .text-muted { color: var(--text-muted); }
+  .text-center { text-align: center; }
+  .mt-8 { margin-top: 8px; }
+  .mt-16 { margin-top: 16px; }
+  .mb-16 { margin-bottom: 16px; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+  .hint { background: var(--info-bg); color: var(--info);
+    padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; border-left: 3px solid var(--info); }
+
+  /* Batch import preview */
+  .batch-preview-wrap { max-height: 280px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
+  table.batch-preview { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.batch-preview th, table.batch-preview td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+  table.batch-preview th { background: var(--surface-2); position: sticky; top: 0; font-weight: 600; }
+  table.batch-preview tr.match-ok td { background: #f0fdf4; }
+  table.batch-preview tr.match-fail td { background: #fef2f2; color: #991b1b; }
+
+  /* Scanner row (input + camera button) */
+  .scanner-row { display: flex; gap: 8px; }
+  .scanner-row .scanner-input { flex: 1; }
+  .camera-btn {
+    background: #06b6d4; color: #fff; border: 2px solid #fff;
+    border-radius: 8px; padding: 0 18px; cursor: pointer;
+    font-weight: 700; font-size: 14px; font-family: inherit;
+    display: flex; align-items: center; gap: 6px; min-width: 110px;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .camera-btn:hover { background: #0891b2; }
+  .camera-btn:active { transform: scale(0.96); }
+  .camera-btn-label { font-size: 14px; }
+
+  /* Camera modal */
+  .camera-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+    display: none; flex-direction: column; z-index: 300;
+  }
+  .camera-overlay.active { display: flex; }
+  .camera-modal { display: flex; flex-direction: column; height: 100%; }
+  .camera-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 16px; background: var(--bg); color: #fff;
+  }
+  .camera-close {
+    background: var(--danger); color: #fff; border: none;
+    padding: 10px 16px; border-radius: 8px; cursor: pointer;
+    font-weight: 700; font-size: 14px;
+  }
+  .camera-reader {
+    flex: 1; min-height: 0;
+    background: #000; position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .camera-reader video { max-width: 100%; max-height: 100%; }
+  .camera-reader > div { width: 100% !important; }
+  .camera-controls {
+    background: var(--bg); color: #fff; padding: 12px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 8px;
+  }
+  .camera-status { font-size: 13px; opacity: 0.9; }
+  .camera-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .camera-last {
+    background: rgba(255,255,255,0.05); color: #fff;
+    padding: 10px 16px; font-family: monospace;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* ============ MOBILE UX (≤ 700px) ============ */
+  @media (max-width: 700px) {
+    main { padding: 10px; }
+    .card { padding: 12px; border-radius: 10px; }
+    .header-row { gap: 8px; }
+    .header-title { font-size: 15px; }
+    .header-title small { display: none; }
+    .header-btn { padding: 9px 11px; font-size: 13px; min-height: 40px; }
+    .header-actions { gap: 6px; }
+
+    /* Bigger touch targets for buttons */
+    .btn { min-height: 42px; padding: 10px 14px; }
+    .btn.sm { min-height: 36px; padding: 8px 12px; font-size: 13px; }
+    input[type=text], input[type=number], select { font-size: 16px; min-height: 44px; }
+
+    /* Scanner improvements */
+    .scanner-box { padding: 12px; margin-bottom: 12px; position: relative; top: auto; }
+    .scanner-row { flex-direction: column; gap: 8px; }
+    .scanner-input { font-size: 20px; padding: 14px; min-height: 56px; }
+    .camera-btn { width: 100%; min-height: 56px; font-size: 17px; justify-content: center; }
+    .camera-btn-label { font-size: 16px; }
+
+    /* Stats: 2-column grid */
+    .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-card { padding: 10px; }
+    .stat-card .value { font-size: 18px; }
+    .stat-card .label { font-size: 11px; }
+    .stat-card .sub { font-size: 10px; }
+
+    /* Filter bar — stack on mobile */
+    .filter-bar { flex-direction: column; align-items: stretch; }
+    .filter-bar input[type=text] { min-width: auto; width: 100%; }
+    .filter-bar select { width: 100%; }
+
+    /* Table: card-style on mobile */
+    .table-wrap { overflow-x: visible; background: transparent; }
+    table.products { display: block; width: 100%; border-collapse: collapse; }
+    table.products thead { display: none; }
+    table.products tbody { display: block; }
+    table.products tr {
+      display: block; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px; margin-bottom: 10px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    table.products tr.matched { background: var(--success-bg) !important; border-color: var(--success); }
+    table.products tr.over { background: var(--danger-bg) !important; border-color: var(--danger); }
+    table.products td {
+      display: block; padding: 3px 0; border: none; white-space: normal; font-size: 13px;
+    }
+    table.products td.title { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
+    table.products td:nth-child(1) { margin-bottom: 6px; }
+    table.products td:nth-child(2)::before { content: "🏷 "; }
+    table.products td:nth-child(3)::before { content: "SKU: "; color: var(--text-muted); font-weight: 600; }
+    table.products td:nth-child(5)::before { content: "Type: "; color: var(--text-muted); }
+    table.products td:nth-child(6)::before { content: "Size: "; color: var(--text-muted); }
+    table.products td:nth-child(7)::before { content: "Color: "; color: var(--text-muted); }
+    table.products td:nth-child(8)::before { content: "ตั้งต้น: "; color: var(--text-muted); font-weight: 600; }
+    table.products td:nth-child(9)::before { content: "นับได้: "; color: var(--text-muted); font-weight: 600; }
+    table.products td:nth-child(10)::before { content: "ส่วนต่าง: "; color: var(--text-muted); font-weight: 600; }
+    table.products td:nth-child(8), table.products td:nth-child(9), table.products td:nth-child(10) {
+      display: inline-block; margin-right: 12px; font-size: 14px;
+    }
+    table.products td:nth-child(11) { margin-top: 8px; display: flex; gap: 6px; }
+    table.products td:nth-child(11) button { flex: 1; min-height: 42px; font-size: 14px; }
+    /* Hide Type/Size/Color when empty - JS handles, or just always show */
+    table.products td:empty { display: none; }
+
+    /* Pagination */
+    #paginationBar { flex-direction: column; gap: 8px; align-items: stretch; }
+    #paginationBar > div { text-align: center; }
+
+    /* Session grid - 1 column */
+    .session-grid { grid-template-columns: 1fr; }
+
+    /* Settings buttons - full width */
+    .input-group { flex-direction: column; }
+    .input-group .btn { width: 100%; }
+
+    /* Modal — full screen on mobile */
+    .modal { max-width: 100%; max-height: 95vh; border-radius: 12px; }
+
+    /* Form grid - stack */
+    .form-grid.cols-2 { grid-template-columns: 1fr; }
+
+    /* Action button group in count view */
+    .flex-between > div:last-child { display: flex; flex-wrap: wrap; gap: 6px; }
+    .flex-between > div:last-child .btn { flex: 1; min-width: 100px; }
+  }
+
+  /* Very small screens (≤ 400px) */
+  @media (max-width: 400px) {
+    .header-title { font-size: 13px; }
+    .header-btn { padding: 8px 10px; font-size: 12px; min-height: 38px; }
+    .header-actions { flex-wrap: nowrap; gap: 4px; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="header-row">
+    <div class="header-title">
+      Stock Count
+      <small>CCO / Crochet / Masterpiece</small>
+    </div>
+    <div class="header-actions">
+      <button class="header-btn" id="navHomeBtn">📋 Sessions</button>
+      <button class="header-btn" id="navReceiveBtn">📥 รับสินค้า</button>
+      <button class="header-btn" id="navMergeBtn">🔀 Merge</button>
+      <button class="header-btn" id="navSettingsBtn">⚙️ Settings</button>
+      <button class="header-btn primary" id="navNewBtn">➕ New</button>
+    </div>
+  </div>
+</header>
+<main>
+  <div class="view active" id="viewHome">
+    <div class="card">
+      <div class="flex-between">
+        <div>
+          <h2>การนับสต๊อก</h2>
+          <div class="subtitle">เลือก Session ที่ค้างไว้ หรือสร้างใหม่</div>
+        </div>
+        <button class="btn primary" id="newSessionBtnHome">➕ สร้าง Session ใหม่</button>
+      </div>
+      <div id="sessionListContainer">
+        <div class="empty-state">
+          <div style="font-size:48px;margin-bottom:12px;opacity:0.5">📦</div>
+          <div>ยังไม่มี Session การนับ</div>
+          <div class="text-muted" style="font-size:13px;margin-top:6px">กด "สร้าง Session ใหม่" เพื่อเริ่มต้น</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="view" id="viewNew">
+    <div class="card">
+      <h2>สร้าง Session การนับใหม่</h2>
+      <div class="subtitle">อัปโหลดไฟล์ Excel ยอดตั้งต้น + เลือกองค์กรและคลังที่จะนับ</div>
+      <div class="form-grid cols-2">
+        <div><label>ชื่อ Session</label><input type="text" id="newSessionName" placeholder="เช่น Stock Count - Shop 25 May 2026" /></div>
+        <div><label>วันที่นับ</label><input type="text" id="newSessionDate" /></div>
+      </div>
+      <div class="form-grid cols-2 mt-16">
+        <div><label>องค์กร / หน่วยงาน</label>
+          <select id="newSessionOrg">
+            <option value="CCO">Concept One (CCO)</option>
+            <option value="CROCHET">Crochet</option>
+            <option value="MTP">Masterpiece (MTP)</option>
+          </select>
+        </div>
+        <div><label>คลัง (Warehouse)</label>
+          <div class="input-group"><select id="newSessionWarehouse"></select><button class="btn sm" id="addWarehouseBtn">+ เพิ่ม</button></div>
+        </div>
+      </div>
+      <div class="mt-16">
+        <label>ไฟล์ Excel ตั้งต้น</label>
+        <div class="drop-zone" id="dropZone">
+          <div style="font-size:32px;margin-bottom:8px">📁</div>
+          <div><b>คลิก</b> หรือ ลากไฟล์ .xlsx มาวางที่นี่</div>
+          <div class="text-muted" style="font-size:12px;margin-top:6px">คอลัมน์ที่ต้องการ: Barcode, SKU, Title, Type, Size, <b>Color</b>, Vendor, Price, Cost, Qty</div>
+          <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" />
+        </div>
+        <div id="filePreview" class="mt-8" style="display:none"><div class="hint" id="filePreviewInfo"></div></div>
+      </div>
+      <div class="modal-actions mt-16">
+        <button class="btn" id="cancelNewBtn">ยกเลิก</button>
+        <button class="btn primary" id="createSessionBtn" disabled>เริ่มนับ</button>
+      </div>
+    </div>
+  </div>
+  <div class="view" id="viewCount">
+    <div class="scanner-box">
+      <label for="barcodeInput">📷 สแกน / พิมพ์ Barcode</label>
+      <div class="scanner-row">
+        <input type="text" id="barcodeInput" class="scanner-input" placeholder="ยิงเครื่องสแกน หรือพิมพ์ Barcode + Enter" autocomplete="off" inputmode="text" />
+        <button id="openCameraBtn" class="camera-btn" title="สแกนด้วยกล้อง" type="button">
+          <span style="font-size:24px">📷</span>
+          <span class="camera-btn-label">กล้อง</span>
+        </button>
+      </div>
+      <div class="scanner-status">
+        <div><span class="focus-indicator" id="focusIndicator">● พร้อมรับสแกน</span><span style="margin-left:8px;font-size:12px" id="lastScanText">รอการสแกนแรก...</span></div>
+        <div class="last-scan" id="lastScanTime"></div>
+      </div>
+    </div>
+    <div class="stats-row" id="statsRow"></div>
+    <div class="card">
+      <div class="flex-between mb-16">
+        <div><h2 id="countSessionTitle">-</h2><div class="subtitle" id="countSessionMeta">-</div></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn sm" id="batchImportBtn">📂 อัพโหลดยอดนับ</button>
+          <button class="btn sm" id="exportBtn">📥 Export Excel</button>
+          <button class="btn sm" id="resetCountBtn">🔄 รีเซ็ตจำนวนนับ</button>
+          <button class="btn sm danger" id="deleteSessionBtn">🗑 ลบ Session</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <input type="text" id="searchInput" placeholder="ค้นหา Barcode / SKU / ชื่อสินค้า / Color..." />
+        <select id="filterStatus">
+          <option value="all">แสดงทั้งหมด</option>
+          <option value="pending">⏳ ยังนับไม่ครบ</option>
+          <option value="matched">✅ นับครบแล้ว</option>
+          <option value="over">⚠️ นับเกิน</option>
+          <option value="under">นับขาด (จำนวนนับ &lt; ตั้งต้น)</option>
+          <option value="not_started">ยังไม่ได้นับ (จำนวนนับ = 0)</option>
+          <option value="not_in_master">❓ ไม่อยู่ในไฟล์ตั้งต้น</option>
+        </select>
+        <select id="filterType" title="กรองตาม Type"><option value="">Type: ทั้งหมด</option></select>
+        <select id="filterSize" title="กรองตาม Size"><option value="">Size: ทั้งหมด</option></select>
+        <select id="filterColor" title="กรองตาม Color"><option value="">Color: ทั้งหมด</option></select>
+        <button class="btn sm" id="clearFiltersBtn" title="ล้างฟิลเตอร์ทั้งหมด">✕ ล้าง</button>
+      </div>
+      <div class="table-wrap">
+        <table class="products" id="productTable">
+          <thead><tr>
+            <th>สถานะ</th><th>Barcode</th><th>SKU</th><th>ชื่อสินค้า</th>
+            <th>Type</th><th>Size</th><th>Color</th>
+            <th class="num">ตั้งต้น</th><th class="num">นับได้</th><th class="num">ส่วนต่าง</th><th>การจัดการ</th>
+          </tr></thead>
+          <tbody id="productTableBody"></tbody>
+        </table>
+      </div>
+      <div id="paginationBar" class="flex-between mt-16" style="font-size:13px"></div>
+    </div>
+  </div>
+  <div class="view" id="viewReceive">
+    <div class="card">
+      <div class="flex-between mb-16">
+        <div>
+          <h2>📥 รับสินค้าเข้า</h2>
+          <div class="subtitle">สแกน Barcode สินค้าที่เข้าใหม่ — ใช้งานครั้งเดียวจบ ไม่เก็บข้อมูลในระบบ</div>
+        </div>
+      </div>
+
+      <div id="receiveUploadStep">
+        <div class="hint" style="font-size:13px">
+          <b>ขั้นตอน:</b> 1) อัพโหลดไฟล์ Master สินค้า → 2) ยิง Barcode ทุกชิ้นที่เข้า → 3) Export Excel
+        </div>
+        <label class="mt-16">ไฟล์ Master (Shopify Export)</label>
+        <div class="drop-zone" id="receiveDropZone">
+          <div style="font-size:32px;margin-bottom:8px">📁</div>
+          <div><b>คลิก</b> หรือ ลากไฟล์ .xlsx มาวางที่นี่</div>
+          <div class="text-muted" style="font-size:12px;margin-top:6px">
+            อ่านคอลัมน์: Variant Barcode, Variant SKU, Option1 Value (Size), Vendor (brand), Title (Name)
+          </div>
+          <input type="file" id="receiveFileInput" accept=".xlsx,.xls" style="display:none" />
+        </div>
+        <div id="receiveMasterInfo" class="mt-8" style="display:none"><div class="hint" id="receiveMasterInfoText"></div></div>
+      </div>
+
+      <div id="receiveScanStep" style="display:none">
+        <div class="scanner-box">
+          <label for="receiveBarcodeInput">📷 สแกน / พิมพ์ Barcode สินค้าที่เข้า</label>
+          <div class="scanner-row">
+            <input type="text" id="receiveBarcodeInput" class="scanner-input" placeholder="ยิงเครื่องสแกน หรือพิมพ์ Barcode + Enter" autocomplete="off" inputmode="text" />
+            <button id="receiveOpenCameraBtn" class="camera-btn" type="button">
+              <span style="font-size:24px">📷</span>
+              <span class="camera-btn-label">กล้อง</span>
+            </button>
+          </div>
+          <div class="scanner-status">
+            <div>
+              <span class="focus-indicator" id="receiveFocusIndicator">● พร้อมรับสแกน</span>
+              <span style="margin-left:8px;font-size:12px" id="receiveLastScanText">รอการสแกนแรก...</span>
+            </div>
+            <div class="last-scan" id="receiveLastScanTime"></div>
+          </div>
+        </div>
+
+        <div class="stats-row" id="receiveStatsRow"></div>
+
+        <div class="flex-between mb-16">
+          <div>
+            <div id="receiveMasterStat" class="text-muted" style="font-size:13px"></div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn sm" id="receiveExportBtn">📥 Export Excel</button>
+            <button class="btn sm" id="receiveChangeMasterBtn">📁 เปลี่ยน Master</button>
+            <button class="btn sm danger" id="receiveClearBtn">🗑 ล้างทั้งหมด</button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <input type="text" id="receiveSearchInput" placeholder="ค้นหา Barcode / SKU / ชื่อ..." />
+          <select id="receiveFilterStatus">
+            <option value="all">แสดงทั้งหมด</option>
+            <option value="found">✅ ตรง Master</option>
+            <option value="not_found">⚠️ ไม่ตรง Master</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <table class="products" id="receiveTable">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Barcode</th>
+                <th>SKU</th>
+                <th>Size</th>
+                <th>Brand</th>
+                <th>Name</th>
+                <th>Code</th>
+                <th class="num">QT</th>
+                <th>การจัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="receiveTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="viewMerge">
+    <div class="card">
+      <div class="flex-between mb-16">
+        <div>
+          <h2>🔀 รวมผลการนับ (Merge Sessions)</h2>
+          <div class="subtitle">รวมไฟล์ Export จากหลายเครื่อง → SUM ยอดนับต่อ Barcode/SKU → Export ไฟล์เดียว</div>
+        </div>
+      </div>
+
+      <div id="mergeUploadStep">
+        <div class="hint" style="font-size:13px">
+          <b>ขั้นตอน:</b> 1) Upload ไฟล์ Excel ของแต่ละเครื่อง → 2) Preview ผลรวม + Conflict → 3) Export ไฟล์รวม
+        </div>
+        <label class="mt-16">ไฟล์ Export (เลือกหลายไฟล์พร้อมกัน)</label>
+        <div class="drop-zone" id="mergeDropZone">
+          <div style="font-size:32px;margin-bottom:8px">📁</div>
+          <div><b>คลิก</b> หรือ ลากไฟล์ .xlsx หลายไฟล์มาวาง</div>
+          <div class="text-muted" style="font-size:12px;margin-top:6px">
+            รับไฟล์ Export จาก v2.0 (Sheet "Stock Count") หรือ v1.5.x — Match by Barcode (fallback: SKU+Size)
+          </div>
+          <input type="file" id="mergeFileInput" accept=".xlsx,.xls" multiple style="display:none" />
+        </div>
+        <div id="mergeFilesList" class="mt-8"></div>
+        <div class="flex-between mt-16">
+          <div></div>
+          <button class="btn primary" id="mergeProcessBtn" disabled>▶ ประมวลผล → Preview</button>
+        </div>
+      </div>
+
+      <div id="mergePreviewStep" style="display:none">
+        <div class="form-grid cols-2 mt-8">
+          <div>
+            <label>Match key</label>
+            <select id="mergeMatchSelect">
+              <option value="barcode">Barcode (แนะนำ)</option>
+              <option value="sku_size">SKU + Size</option>
+            </select>
+          </div>
+          <div>
+            <label>Conflict policy (qty_initial ต่างกัน)</label>
+            <select id="mergeConflictSelect">
+              <option value="max">ใช้ค่ามากที่สุด (แนะนำ)</option>
+              <option value="first">ใช้ค่าจากไฟล์แรก</option>
+              <option value="last">ใช้ค่าจากไฟล์สุดท้าย</option>
+            </select>
+          </div>
+        </div>
+        <div id="mergeSummary" class="hint mt-16" style="font-size:13px"></div>
+        <div class="filter-bar mt-8">
+          <input type="text" id="mergeSearchInput" placeholder="ค้นหา..." />
+          <select id="mergeFilterStatus">
+            <option value="all">แสดงทั้งหมด</option>
+            <option value="conflict">⚠️ Conflict</option>
+            <option value="matched">✅ ครบ</option>
+            <option value="under">นับขาด</option>
+            <option value="over">นับเกิน</option>
+          </select>
+        </div>
+        <div class="table-wrap" style="max-height:500px;overflow:auto">
+          <table class="products" id="mergeTable">
+            <thead>
+              <tr>
+                <th>Barcode</th><th>SKU</th><th>Title</th><th>Size</th>
+                <th class="num">ตั้งต้น</th><th class="num">รวมนับ</th><th class="num">ส่วนต่าง</th>
+                <th>Files</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="mergeTableBody"></tbody>
+          </table>
+        </div>
+        <div class="flex-between mt-16" style="flex-wrap:wrap;gap:8px">
+          <button class="btn" id="mergeBackBtn">← เพิ่มไฟล์</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn" id="mergeClearBtn">🗑 เริ่มใหม่</button>
+            <button class="btn primary" id="mergeExportBtn">📥 Export Merged Excel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="viewSettings">
+    <div class="card">
+      <h2>ตั้งค่า</h2>
+      <div class="subtitle">จัดการคลัง, Cloud Sync และข้อมูล</div>
+      <h3 style="margin-top:20px">คลัง (Warehouses)</h3>
+      <div class="chip-row" id="warehouseChips"></div>
+      <div class="input-group mt-8">
+        <input type="text" id="newWarehouseName" placeholder="ชื่อคลังใหม่ เช่น Shop, Co-Sign, Flood..." />
+        <button class="btn primary" id="saveWarehouseBtn">+ เพิ่มคลัง</button>
+      </div>
+      <h3 style="margin-top:24px">ข้อมูลที่จัดเก็บ</h3>
+      <div id="storageInfo" class="hint">กำลังตรวจสอบ...</div>
+      <h3 style="margin-top:24px">การจัดการข้อมูล</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn danger" id="clearAllBtn">🗑 ล้างข้อมูลทั้งหมด</button>
+      </div>
+      <h3 style="margin-top:24px">เกี่ยวกับ</h3>
+      <div style="font-size:13px;color:var(--text-muted)">
+        <div><b>Stock Count</b> v2.0.0</div>
+        <div>PWA สำหรับนับสต๊อก CCO / Crochet / MTP</div>
+        <div>Pure Local + Goods Receive + Merge Tool + Barcode-as-Text</div>
+        <div id="protocolNote" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </div>
+</main>
+<div class="modal-overlay" id="genericModal">
+  <div class="modal">
+    <h3 id="genericModalTitle">Title</h3>
+    <div id="genericModalBody"></div>
+    <div class="modal-actions">
+      <button class="btn" id="genericModalCancel">ยกเลิก</button>
+      <button class="btn primary" id="genericModalOk">ตกลง</button>
+    </div>
+  </div>
+</div>
+<!-- Edit Item Modal -->
+<div class="modal-overlay" id="editItemModal">
+  <div class="modal">
+    <h3 style="margin:0 0 4px 0">✏️ แก้ไขรายการสินค้า</h3>
+    <div class="text-muted" style="font-size:13px;margin-bottom:12px" id="editItemSubtitle">-</div>
+    <div class="form-grid">
+      <div>
+        <label>SKU</label>
+        <input type="text" id="editItemSku" disabled style="background:var(--surface-2);color:var(--text-muted)" />
+      </div>
+      <div>
+        <label>ชื่อสินค้า</label>
+        <input type="text" id="editItemTitle" disabled style="background:var(--surface-2);color:var(--text-muted)" />
+      </div>
+      <div>
+        <label>Barcode <span class="text-muted" style="font-weight:normal">(แก้ไขได้)</span></label>
+        <input type="text" id="editItemBarcode" placeholder="ยังไม่มี Barcode" autocomplete="off" />
+      </div>
+      <div>
+        <label>จำนวนตั้งต้น <span class="text-muted" style="font-weight:normal">(แก้ไขได้)</span></label>
+        <input type="number" id="editItemQtyInitial" min="0" />
+      </div>
+    </div>
+    <div class="hint mt-16" style="font-size:12px">
+      💡 หลังบันทึก: ครั้งถัดไปสแกน Barcode นี้จะ Match กับรายการนี้อัตโนมัติ
+    </div>
+    <div class="modal-actions mt-16">
+      <button class="btn" id="editItemCancelBtn">ยกเลิก</button>
+      <button class="btn primary" id="editItemSaveBtn">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Batch Import Modal -->
+<div class="modal-overlay" id="batchImportModal">
+  <div class="modal" style="max-width:720px">
+    <h3 style="margin:0 0 4px 0">📂 อัพโหลดยอดนับจาก Excel</h3>
+    <div class="text-muted" style="font-size:13px;margin-bottom:12px">
+      อัพโหลดไฟล์ Excel ที่จดยอดนับไว้ — ระบบจะจับคู่ด้วย Barcode (หรือ SKU)
+    </div>
+
+    <div id="batchStep1">
+      <div class="drop-zone" id="batchDropZone" style="margin-bottom:12px">
+        <div style="font-size:32px;margin-bottom:8px">📁</div>
+        <div><b>คลิก</b> หรือ ลากไฟล์ .xlsx มาวางที่นี่</div>
+        <div class="text-muted" style="font-size:12px;margin-top:6px">
+          รองรับคอลัมน์: <b>Barcode</b> + <b>Qty Counted</b> (หรือ "Qty" / "นับได้" / "จำนวน")<br>
+          ถ้าไม่มี Qty จะนับเป็น 1 ต่อแถว
+        </div>
+        <input type="file" id="batchFileInput" accept=".xlsx,.xls" style="display:none" />
+      </div>
+      <div class="hint" style="font-size:12px">
+        💡 ตัวอย่างไฟล์: Excel ที่ Export ออกมาจะใช้ Re-import ได้เลย หรือทำไฟล์ใหม่ 2 คอลัมน์: Barcode + Qty Counted
+      </div>
+    </div>
+
+    <div id="batchStep2" style="display:none">
+      <div class="form-grid cols-2 mt-8">
+        <div>
+          <label>โหมดการบันทึก</label>
+          <select id="batchModeSelect">
+            <option value="replace">Replace — ทับตัวเลขเก่า</option>
+            <option value="add">Add — บวกเพิ่มจากตัวเดิม</option>
+          </select>
+        </div>
+        <div>
+          <label>การจับคู่</label>
+          <select id="batchMatchSelect">
+            <option value="barcode">ใช้ Barcode (แนะนำ)</option>
+            <option value="sku">ใช้ SKU</option>
+          </select>
+        </div>
+      </div>
+      <div id="batchPreviewBox" class="mt-16"></div>
+      <div class="hint mt-8" id="batchSummaryBox" style="font-size:13px"></div>
+    </div>
+
+    <div class="modal-actions mt-16">
+      <button class="btn" id="batchCancelBtn">ยกเลิก</button>
+      <button class="btn" id="batchBackBtn" style="display:none">← ย้อนกลับ</button>
+      <button class="btn primary" id="batchApplyBtn" style="display:none" disabled>✓ บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Camera Scanner Modal -->
+<div class="camera-overlay" id="cameraOverlay">
+  <div class="camera-modal">
+    <div class="camera-header">
+      <div>
+        <h3 style="margin:0;font-size:16px">📷 สแกน Barcode ด้วยกล้อง</h3>
+        <div style="font-size:12px;opacity:0.85;margin-top:2px">เล็งกล้องไปที่ Barcode บนสินค้า</div>
+      </div>
+      <button id="closeCameraBtn" class="camera-close" type="button">✕ ปิด</button>
+    </div>
+    <div id="cameraReader" class="camera-reader"></div>
+    <div class="camera-controls">
+      <div class="camera-status" id="cameraStatus">กำลังเปิดกล้อง...</div>
+      <div class="camera-actions">
+        <button id="switchCameraBtn" class="btn sm" type="button">🔄 สลับกล้อง</button>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#fff">
+          <input type="checkbox" id="continuousScanChk" checked /> สแกนต่อเนื่อง
+        </label>
+      </div>
+    </div>
+    <div class="camera-last">
+      <div id="cameraLastScan" style="font-size:13px;opacity:0.9">ยังไม่มีการสแกน</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

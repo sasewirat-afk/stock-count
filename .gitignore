@@ -1,0 +1,42 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node (if any local tooling)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Build outputs
+dist/
+build/
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+
+# Vercel
+.vercel/
+
+# Misc
+*.log
+.cache/
+
+# Optional: ignore generated/exported Excel
+exports/
+*.tmp.xlsx
+
+# Legacy v1.x files (no longer used in v2.0 Pure Local)
+SUPABASE_SETUP.md
+supabase_schema.sql
